@@ -4,9 +4,16 @@ on:
   pull_request:
     types: [closed]
     branches: [release]
+    # Prevents the bot's own artifacthub-pkg.yml update PR (below) from
+    # re-triggering this job. Belt and suspenders: the "already released"
+    # check further down is keyed on package.json's version, which that PR
+    # never touches, so it would harmlessly skip anyway.
+    paths-ignore:
+      - artifacthub-pkg.yml
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   release:
@@ -52,6 +59,13 @@ jobs:
         if: steps.check.outputs.exists == 'false'
         run: npm run package
 
+      - name: Compute checksum
+        id: checksum
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          CHECKSUM=$(sha256sum "link-${{ steps.version.outputs.version }}.tar.gz" | awk '{print $1}')
+          echo "sha256=$CHECKSUM" >> "$GITHUB_OUTPUT"
+
       - name: Create tag
         if: steps.check.outputs.exists == 'false'
         run: |
@@ -69,3 +83,39 @@ jobs:
             *.tar.gz \
             --title "${{ steps.version.outputs.tag }}" \
             --generate-notes
+
+      - name: Update artifacthub-pkg.yml
+        if: steps.check.outputs.exists == 'false'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          ARCHIVE_URL: https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.tag }}/link-${{ steps.version.outputs.version }}.tar.gz
+          CHECKSUM: ${{ steps.checksum.outputs.sha256 }}
+        run: node .github/scripts/sync-artifacthub-pkg.mjs
+
+      - name: Open a PR to sync artifacthub-pkg.yml
+        if: steps.check.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          BRANCH="bot/sync-artifacthub-pkg-${{ steps.version.outputs.tag }}"
+          git checkout -b "$BRANCH"
+          git add artifacthub-pkg.yml
+          git commit -m "chore: sync artifacthub-pkg.yml to ${{ steps.version.outputs.tag }}"
+          git push origin "$BRANCH"
+
+          cat <<'EOF' > /tmp/pr-body.md
+          Updates `artifacthub-pkg.yml`'s version, timestamp, archive URL, and checksum to match the just-published release.
+
+          **Note:** this PR was opened using the workflow's default token, so its required status checks (CI, CodeQL) won't run automatically - that's a GitHub Actions limitation (`GITHUB_TOKEN`-triggered pushes don't trigger other workflows), not a problem with this change. The diff is a predictable, mechanical metadata update. Merge with the admin bypass-merge option, or push an empty commit of your own to this branch first if you'd rather see the checks run.
+          EOF
+
+          gh pr create \
+            --base release \
+            --head "$BRANCH" \
+            --title "chore: sync artifacthub-pkg.yml to ${{ steps.version.outputs.tag }}" \
+            --body-file /tmp/pr-body.md
