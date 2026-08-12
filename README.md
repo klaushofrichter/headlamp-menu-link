@@ -112,6 +112,11 @@ initContainers:
         mountPath: /headlamp/plugins
 ```
 
+However you install it, Headlamp's Settings > Plugins page will list it once
+it's picked up, confirming it loaded correctly:
+
+![Plugin listed and loaded in Settings > Plugins](docs/plugins-list.jpg)
+
 ## Configuring
 
 Open Headlamp, go to **Settings > Plugins > link**, set the menu text and
