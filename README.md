@@ -20,11 +20,16 @@ dashboard, a runbook, an internal wiki page, anything with a URL.
 
 ## What it looks like
 
+![Sidebar entry](docs/sidebar.jpg)
+
 - A sidebar entry with a chain-link icon, opening the configured URL in a
   new tab.
 - A settings page at **Settings > Plugins > link** with two fields:
   - **Menu text** — the label shown in the sidebar.
   - **Link URL** — where it points.
+
+![Settings page](docs/settings.jpg)
+
 - Changes save automatically as you type (debounced). A page reload is
   needed for the sidebar to reflect a change, since the plugin only reads
   its configuration once, at startup — the same behavior as Headlamp's own
