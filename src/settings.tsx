@@ -23,7 +23,13 @@ interface PluginConfig {
 
 export const store = new ConfigStore<PluginConfig>('link');
 
-function AutoSaveInput({ onSave, defaultValue = '', delay = 1000, helperText = '', ariaLabel = '' }) {
+function AutoSaveInput({
+  onSave,
+  defaultValue = '',
+  delay = 1000,
+  helperText = '',
+  ariaLabel = '',
+}) {
   const [value, setValue] = useState(defaultValue);
   const [timer, setTimer] = useState(null);
 
@@ -111,8 +117,7 @@ export default function Settings() {
     <Box width={'80%'} style={{ paddingTop: '8vh' }}>
       <NameValueTable rows={settingsRows} />
       <Typography variant="caption" sx={{ display: 'block', marginTop: 2 }}>
-        Changes are saved automatically. Reload the page to see them reflected
-        in the sidebar.
+        Changes are saved automatically. Reload the page to see them reflected in the sidebar.
       </Typography>
     </Box>
   );

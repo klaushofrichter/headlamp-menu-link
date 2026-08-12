@@ -1,0 +1,12 @@
+version: 1.0.0
+name: link
+displayName: Sidebar Link
+createdAt: "2026-08-12T14:08:51Z"
+description: >
+  Adds one configurable link to Headlamp's sidebar, pointing at any external
+  URL. The label and URL are editable live from Settings > Plugins > link.
+annotations:
+  headlamp/plugin/archive-url: "https://github.com/klaushofrichter/headlamp-menu-link/releases/download/v1.0.0/link-1.0.0.tar.gz"
+  headlamp/plugin/archive-checksum: "SHA256:680978238a5680310ab5e7746f3f8b29dd8c5fa13277a86fd25e55801fef307d"
+  headlamp/plugin/version-compat: ">=0.22"
+  headlamp/plugin/distro-compat: "in-cluster,web,docker-desktop,desktop"

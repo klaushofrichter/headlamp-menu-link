@@ -39,64 +39,77 @@ dashboard, a runbook, an internal wiki page, anything with a URL.
 
 ## Installing
 
+### Prerequisites
+
+- **Node.js** v22.0.0 or later
+- **npm** v11.0.0 or later
+- A running Headlamp instance ([desktop app](https://headlamp.dev/docs/latest/installation/desktop/)
+  or in-cluster)
+
 Headlamp's built-in plugin manager (Settings > Plugins > "Install plugin
 from ArtifactHub URL") only accepts plugins published to
-[ArtifactHub](https://artifacthub.io/packages/search?kind=18). This plugin
-isn't published there, so it needs to be built and installed manually.
+[ArtifactHub](https://artifacthub.io/packages/search?kind=21). This plugin
+isn't published there yet, so for now it needs to be built and installed
+manually - see [Building & Shipping Plugins](https://headlamp.dev/docs/latest/development/plugins/building/)
+for the general approach this follows.
 
-### 1. Build
+### 1. Build and package
 
 ```bash
 git clone https://github.com/klaushofrichter/headlamp-menu-link.git
 cd headlamp-menu-link
 npm install
-npx @kinvolk/headlamp-plugin build
+npm run build
+npm run package
 ```
 
-This produces `dist/main.js`. To get the exact `main.js` + `package.json`
-pair Headlamp's plugin loader expects (a plugin with only `main.js` loads
-silently but never registers anything), run:
-
-```bash
-npx @kinvolk/headlamp-plugin extract . ./output
-```
-
-which writes `output/link/main.js` and `output/link/package.json`.
+`npm run package` bundles `dist/main.js` + `package.json` into a
+`link-1.0.0.tar.gz` tarball in the format Headlamp expects, and prints its
+SHA256 checksum.
 
 ### 2a. Headlamp Desktop
 
-Copy the `output/link/` folder into Headlamp's user-plugins directory and
-restart Headlamp:
+Extract the tarball into Headlamp's plugins directory and restart Headlamp:
 
-- **Linux**: `~/.local/share/Headlamp/user-plugins/link/` (or
-  `~/.config/Headlamp/user-plugins/link/` if the data directory doesn't
-  exist yet)
-- **macOS**: `~/Library/Application Support/Headlamp/user-plugins/link/`
-- **Windows**: `%APPDATA%\Headlamp\user-plugins\link\`
+| OS | Plugins directory |
+|----|--------------------|
+| Linux | `~/.config/Headlamp/plugins/` |
+| macOS | `~/.config/Headlamp/plugins/` |
+| Windows | `%APPDATA%\Headlamp\Config\plugins\` |
 
-(Headlamp resolves this path via the standard
-[`env-paths`](https://www.npmjs.com/package/env-paths) OS conventions -
-see `defaultUserPluginsDir()` in
-[`headlamp-k8s/headlamp`'s `plugin-management.ts`](https://github.com/kubernetes-sigs/headlamp/blob/main/app/electron/plugin-management.ts)
-if your install uses a nonstandard config location.)
+```bash
+mkdir -p ~/.config/Headlamp/plugins/
+tar xvf link-1.0.0.tar.gz -C ~/.config/Headlamp/plugins/
+```
+
+(Paths per Headlamp's own [Building & Shipping Plugins](https://headlamp.dev/docs/latest/development/plugins/building/)
+docs - Headlamp Desktop also has a Plugin Catalog for installing plugins
+already published to ArtifactHub, which this one isn't yet.)
 
 ### 2b. Headlamp in-cluster (Helm chart)
 
 The chart's `pluginsManager` sidecar has the same ArtifactHub-only
 restriction, so this plugin has to be mounted into the pod directly instead.
-The pattern that works: bake `output/link/{main.js,package.json}` into a
-`ConfigMap`, then add a small `initContainer` to the Headlamp `Deployment`
-(via the chart's `initContainers`/`volumes` values) that copies both files
-into the same shared `plugins-dir` `emptyDir` volume the main container and
-(if enabled) the `pluginsManager` sidecar already mount at
-`/headlamp/plugins` — Headlamp's plugin loader doesn't care how a plugin
-got into that directory. Sketch:
+Extract the tarball first to get the plain `main.js`/`package.json` pair:
+
+```bash
+tar xvf link-1.0.0.tar.gz
+# -> headlamp-menu-link/main.js, headlamp-menu-link/package.json
+```
+
+The pattern that works from there: bake those two files into a `ConfigMap`,
+then add a small `initContainer` to the Headlamp `Deployment` (via the
+chart's `initContainers`/`volumes` values) that copies both files into the
+same shared `plugins-dir` `emptyDir` volume the main container and (if
+enabled) the `pluginsManager` sidecar already mount at `/headlamp/plugins` -
+Headlamp's plugin loader doesn't care how a plugin got into that directory,
+or what its folder is named. Sketch:
 
 ```yaml
 volumes:
   - name: link-plugin-src
     configMap:
-      name: headlamp-plugin-link  # kubectl create configmap ... --from-file=main.js --from-file=package.json
+      name: headlamp-plugin-link  # kubectl create configmap ... --from-file=headlamp-menu-link/main.js --from-file=headlamp-menu-link/package.json
 
 initContainers:
   - name: install-link-plugin
@@ -132,6 +145,28 @@ npm start
 runs the plugin in watch mode against a running Headlamp instance. See
 Headlamp's own [plugin development docs](https://headlamp.dev/docs/latest/development/plugins/)
 for the general workflow.
+
+Before releasing a new version, this repo follows Headlamp's own
+[release readiness checklist](https://headlamp.dev/docs/latest/tutorials/plugin-development/getting-started/releasing-and-publishing/#release-readiness-checklist):
+
+```bash
+npm run format
+npm run lint
+npm run tsc
+npm run test
+npm run build
+npm run package
+```
+
+## Publishing status
+
+`artifacthub-repo.yml` and `artifacthub-pkg.yml` are included so this repo
+is ready to register on [Artifact Hub](https://artifacthub.io) - the
+mechanism Headlamp's built-in Plugin Catalog uses to discover installable
+plugins - following the
+[official publishing guide](https://headlamp.dev/docs/latest/development/plugins/publishing/).
+It isn't registered there yet, hence "Installing" above being manual for
+now.
 
 ## Relationship to the official Headlamp project
 
