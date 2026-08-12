@@ -1,6 +1,6 @@
 {
   "name": "@klaushofrichter/link",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Configurable sidebar link to any external URL, editable from Settings > Plugins.",
   "license": "MIT",
   "author": "Klaus Hofrichter",

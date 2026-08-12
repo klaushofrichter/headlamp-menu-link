@@ -30,4 +30,11 @@ registerSidebarEntry({
   useClusterURL: false,
 });
 
-registerPluginSettings('link', Settings, false);
+// This name must match package.json's "name" field exactly - Headlamp
+// matches a plugin's loaded PluginInfo.name against this to decide whether
+// to render the custom settings component at all (see
+// PluginSettingsDetailsPure in headlamp-k8s/headlamp's
+// frontend/src/components/App/PluginSettings/PluginSettingsDetails.tsx). A
+// mismatch here fails silently - the plugin still loads and the sidebar
+// entry still works, but Settings > Plugins > link shows no form at all.
+registerPluginSettings('@klaushofrichter/link', Settings, false);
