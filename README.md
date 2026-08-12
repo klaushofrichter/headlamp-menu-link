@@ -64,7 +64,7 @@ npm run package
 ```
 
 `npm run package` bundles `dist/main.js` + `package.json` into a
-`link-1.0.0.tar.gz` tarball in the format Headlamp expects, and prints its
+`link-<version>.tar.gz` tarball in the format Headlamp expects, and prints its
 SHA256 checksum.
 
 ### 2a. Headlamp Desktop
@@ -79,7 +79,7 @@ Extract the tarball into Headlamp's plugins directory and restart Headlamp:
 
 ```bash
 mkdir -p ~/.config/Headlamp/plugins/
-tar xvf link-1.0.0.tar.gz -C ~/.config/Headlamp/plugins/
+tar xvf link-<version>.tar.gz -C ~/.config/Headlamp/plugins/
 ```
 
 (Paths per Headlamp's own [Building & Shipping Plugins](https://headlamp.dev/docs/latest/development/plugins/building/)
@@ -93,7 +93,7 @@ restriction, so this plugin has to be mounted into the pod directly instead.
 Extract the tarball first to get the plain `main.js`/`package.json` pair:
 
 ```bash
-tar xvf link-1.0.0.tar.gz
+tar xvf link-<version>.tar.gz
 # -> headlamp-menu-link/main.js, headlamp-menu-link/package.json
 ```
 
