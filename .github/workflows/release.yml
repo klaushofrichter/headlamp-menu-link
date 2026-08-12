@@ -63,7 +63,13 @@ jobs:
         id: checksum
         if: steps.check.outputs.exists == 'false'
         run: |
-          CHECKSUM=$(sha256sum "link-${{ steps.version.outputs.version }}.tar.gz" | awk '{print $1}')
+          # Discovered, not hardcoded: `npm run package` derives the tarball
+          # filename from package.json's "name" field, sanitizing scoped
+          # names like "@user/pkg" into "user-pkg" - don't assume the exact
+          # sanitization rule, just find the one tarball that exists.
+          TARBALL=$(ls -1 *.tar.gz | head -n1)
+          CHECKSUM=$(sha256sum "$TARBALL" | awk '{print $1}')
+          echo "filename=$TARBALL" >> "$GITHUB_OUTPUT"
           echo "sha256=$CHECKSUM" >> "$GITHUB_OUTPUT"
 
       - name: Create tag
@@ -88,7 +94,7 @@ jobs:
         if: steps.check.outputs.exists == 'false'
         env:
           VERSION: ${{ steps.version.outputs.version }}
-          ARCHIVE_URL: https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.tag }}/link-${{ steps.version.outputs.version }}.tar.gz
+          ARCHIVE_URL: https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.tag }}/${{ steps.checksum.outputs.filename }}
           CHECKSUM: ${{ steps.checksum.outputs.sha256 }}
         run: node .github/scripts/sync-artifacthub-pkg.mjs
 
