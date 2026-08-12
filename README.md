@@ -158,6 +158,18 @@ npm run build
 npm run package
 ```
 
+## Branching and releases
+
+- `main` - everyday development.
+- `release` - protected; only changes via a reviewed pull request with
+  passing checks (lint, typecheck, test, build, and
+  [CodeQL](https://codeql.github.com/)). Direct pushes are blocked.
+- Merging a PR into `release` automatically builds, packages, tags (from
+  `package.json`'s `version`), and publishes a GitHub release with the
+  tarball attached and an auto-generated changelog from the merged PRs
+  since the last release. Bump the version as part of your PR to publish a
+  new release; if it's unchanged, the release step is skipped.
+
 ## Publishing status
 
 `artifacthub-repo.yml` and `artifacthub-pkg.yml` are included so this repo
