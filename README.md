@@ -41,8 +41,11 @@ dashboard, a runbook, an internal wiki page, anything with a URL.
 
 ### Prerequisites
 
-- **Node.js** v22.0.0 or later
-- **npm** v11.0.0 or later
+- **Node.js 22** - pinned in [`.nvmrc`](.nvmrc), so `nvm use` picks it up.
+  Newer is not safe: under Node 26 the `headlamp-plugin` CLI fails before
+  running anything (`ReferenceError: require is not defined in ES module
+  scope`), which breaks every `npm run` script below.
+- **npm** - the version bundled with Node 22 is fine.
 - A running Headlamp instance ([desktop app](https://headlamp.dev/docs/latest/installation/desktop/)
   or in-cluster)
 

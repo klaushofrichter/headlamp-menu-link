@@ -9,6 +9,19 @@ A single-purpose [Headlamp](https://github.com/kubernetes-sigs/headlamp) plugin
 sidebar. The whole plugin is two source files under `src/`. It is an independent
 community plugin, not part of the official `headlamp-k8s/plugins` catalog.
 
+## Node version
+
+**Use Node 22** (`nvm use` — pinned in `.nvmrc`, which `ci.yml` and `release.yml`
+also read via `node-version-file`). Under Node 26 every `npm run` script dies at
+startup with `ReferenceError: require is not defined in ES module scope` in
+`node_modules/yargs/yargs`. Cause: `headlamp-plugin` 0.14.0 does
+`require('yargs/yargs')`, and yargs 17.7.2 ships that entry as an extensionless
+CommonJS file inside a `"type": "module"` package, which Node 26 loads as ESM.
+
+This is not a dependency regression — v1.0.3, before any Dependabot bumps, fails
+identically under Node 26. Don't chase it through the lockfile; switch Node.
+Versions 23–25 are untested.
+
 ## Commands
 
 Everything goes through `@kinvolk/headlamp-plugin`, which wraps the underlying
