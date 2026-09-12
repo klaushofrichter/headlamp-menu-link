@@ -162,7 +162,13 @@ npm run package
 
 ## Branching and releases
 
-- `main` - everyday development.
+- `main` - everyday development. Pull requests into it must pass CI and
+  CodeQL before merging, but the branch is not PR-only: maintainers can
+  still push to it directly.
+- Dependabot's patch and minor pull requests merge themselves once those
+  checks pass, via
+  [`.github/workflows/dependabot-auto-merge.yml`](.github/workflows/dependabot-auto-merge.yml).
+  Major bumps always wait for a human.
 - `release` - protected; only changes via a reviewed pull request with
   passing checks (lint, typecheck, test, build, and
   [CodeQL](https://codeql.github.com/)). Direct pushes are blocked.

@@ -1,0 +1,63 @@
+version: 2
+
+# Version updates. Note these are only half the story: the security half
+# (Dependabot alerts + security updates) is a repo setting, not config, and
+# both must stay switched on under Settings > Code security.
+#
+# PRs land on main, and reach users through the normal main -> release
+# promotion that release.yml turns into a published version. Nothing here
+# releases on its own. ci.yml and codeql.yml both run on every pull_request
+# with no branch filter, so these PRs are built, typechecked and tested before
+# they are merged rather than at promotion time.
+updates:
+  # Plugin dependencies. @kinvolk/headlamp-plugin pins its own React and
+  # MUI, so most of what lands here is the plugin toolchain itself.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Chicago
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: deps
+      prefix-development: deps-dev
+    groups:
+      # One PR per group rather than per package: CI installs and builds the
+      # plugin on every PR, and a dozen single-package PRs would run all of
+      # that a dozen times for changes that are reviewed together anyway.
+      production-dependencies:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+      development-dependencies:
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+    # Majors stay ungrouped and arrive one at a time - those are the ones that
+    # need reading, not batch-merging.
+
+  # Workflow actions. Without this, action majors are only noticed when a
+  # runtime deprecation warning starts appearing in logs.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Chicago
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - ci
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns:
+          - "*"
