@@ -47,4 +47,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}
-        run: gh pr merge --auto --squash "$PR_URL"
+        # If the checks already finished before this job got here, GitHub
+        # rejects auto-merge with "Pull request is in clean status" - there is
+        # nothing left for it to wait on - so merge outright instead. That
+        # fallback is not a way around the checks: main's required checks are
+        # enforced by branch protection, and GITHUB_TOKEN is not a repo admin,
+        # so a plain merge still fails while CI is red.
+        run: |
+          set -euo pipefail
+          gh pr merge --auto --squash "$PR_URL" || gh pr merge --squash "$PR_URL"
