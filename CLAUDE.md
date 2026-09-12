@@ -59,8 +59,21 @@ settings/ConfigStore pattern, check what that plugin does first.
 
 ## Branches and releases
 
-- `main` — everyday development.
+- `main` — everyday development. Protected by required status checks only
+  (`Lint, typecheck, test, build` + `Analyze (javascript-typescript)`), with
+  `strict: false` and `enforce_admins: false` — so PRs need green CI, but
+  maintainers can still push directly. `strict` is off on purpose: requiring
+  branches be up-to-date would invalidate every sibling PR on each merge and
+  force serial Dependabot rebases.
 - `release` — protected; PR-only, requires passing CI (lint, tsc, test, build) and CodeQL.
+
+`.github/workflows/dependabot-auto-merge.yml` enables GitHub's native auto-merge
+on Dependabot PRs whose highest semver change is patch or minor; majors fall
+through to manual review. It runs on `pull_request_target` (a Dependabot-triggered
+`pull_request` gets a read-only token) and **must never gain a checkout step** —
+not checking out PR code is what makes that trigger safe. It depends on `main`'s
+required checks existing: with nothing to wait for, GitHub refuses to enable
+auto-merge at all.
 
 Merging a PR into `release` triggers `.github/workflows/release.yml`, which builds,
 packages, tags `v<package.json version>`, publishes a GitHub release with the tarball,
